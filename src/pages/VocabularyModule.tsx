@@ -6,15 +6,14 @@ import Button from '../components/common/Button';
 import { ProgressBar } from '../components/common/ProgressBar';
 import { 
   Volume2, RotateCcw, ChevronLeft, ChevronRight,
-  CheckCircle2, XCircle, Sparkles, FlipHorizontal
+  CheckCircle2, XCircle, Sparkles, FlipHorizontal, BookOpen, TrendingUp, Award
 } from 'lucide-react';
 import { 
-  vocabularyData, 
-  vocabularyCategoryNames, 
-  vocabularyCategoryColors,
+  vocabularyDatabase, 
+  vocabularyCategoryInfo,
   VocabularyCategory,
   VocabularyWord 
-} from '../data/mockData';
+} from '../data/vocabularyDatabase';
 
 interface FlashCard extends VocabularyWord {
   mastered: boolean;
@@ -24,18 +23,18 @@ export default function VocabularyModule() {
   const { isAuthenticated, addXP } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<VocabularyCategory>('daily');
   const [cards, setCards] = useState<FlashCard[]>(
-    vocabularyData[selectedCategory].map(word => ({ ...word, mastered: false }))
+    vocabularyDatabase[selectedCategory].map(word => ({ ...word, mastered: false }))
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
 
-  const categories = Object.keys(vocabularyData) as VocabularyCategory[];
+  const categories = Object.keys(vocabularyDatabase) as VocabularyCategory[];
 
   const handleCategoryChange = (category: VocabularyCategory) => {
     setSelectedCategory(category);
-    setCards(vocabularyData[category].map(word => ({ ...word, mastered: false })));
+    setCards(vocabularyDatabase[category].map(word => ({ ...word, mastered: false })));
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowResult(false);
@@ -84,7 +83,7 @@ export default function VocabularyModule() {
   };
 
   const resetCards = () => {
-    setCards(vocabularyData[selectedCategory].map(word => ({ ...word, mastered: false })));
+    setCards(vocabularyDatabase[selectedCategory].map(word => ({ ...word, mastered: false })));
     setCurrentIndex(0);
     setIsFlipped(false);
     setKnownCount(0);
@@ -119,7 +118,7 @@ export default function VocabularyModule() {
               <CheckCircle2 className="text-white" size={48} />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">练习完成！</h2>
-            <p className="text-gray-600 mb-8">你完成了 {vocabularyCategoryNames[selectedCategory]} 的学习</p>
+            <p className="text-gray-600 mb-8">你完成了 {vocabularyCategoryInfo[selectedCategory].name} 的学习</p>
             
             <div className="grid grid-cols-3 gap-6 mb-8">
               <div>
@@ -172,7 +171,7 @@ export default function VocabularyModule() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {vocabularyCategoryNames[category]}
+              {vocabularyCategoryInfo[category].name}
             </button>
           ))}
         </div>
@@ -190,7 +189,7 @@ export default function VocabularyModule() {
         <ProgressBar value={progress} color={`from-blue-500 to-blue-600`} />
         <div className="mt-2 flex items-center gap-2">
           <span className="text-xs text-gray-500">
-            {vocabularyCategoryNames[selectedCategory]}
+            {vocabularyCategoryInfo[selectedCategory].name}
           </span>
         </div>
       </Card>
