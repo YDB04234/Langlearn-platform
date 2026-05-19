@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
-import { useProgressStore } from '../stores/progressStore';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { ProgressBar } from '../components/common/ProgressBar';
@@ -9,33 +8,39 @@ import {
   Volume2, RotateCcw, ChevronLeft, ChevronRight,
   CheckCircle2, XCircle, Sparkles, FlipHorizontal
 } from 'lucide-react';
+import { 
+  vocabularyData, 
+  vocabularyCategoryNames, 
+  vocabularyCategoryColors,
+  VocabularyCategory,
+  VocabularyWord 
+} from '../data/mockData';
 
-interface FlashCard {
-  id: string;
-  word: string;
-  pronunciation: string;
-  meaning: string;
-  example: string;
-  exampleMeaning: string;
+interface FlashCard extends VocabularyWord {
   mastered: boolean;
 }
 
-const sampleCards: FlashCard[] = [
-  { id: '1', word: 'hello', pronunciation: '/həˈloʊ/', meaning: '你好，问候', example: 'Hello, how are you?', exampleMeaning: '你好，你怎么样？', mastered: false },
-  { id: '2', word: 'goodbye', pronunciation: '/ɡʊdˈbaɪ/', meaning: '再见', example: 'Goodbye, see you tomorrow!', exampleMeaning: '再见，明天见！', mastered: false },
-  { id: '3', word: 'morning', pronunciation: '/ˈmɔːrnɪŋ/', meaning: '早晨，上午', example: 'Good morning!', exampleMeaning: '早上好！', mastered: false },
-  { id: '4', word: 'evening', pronunciation: '/ˈiːvnɪŋ/', meaning: '傍晚，晚上', example: 'Good evening!', exampleMeaning: '晚上好！', mastered: false },
-  { id: '5', word: 'night', pronunciation: '/naɪt/', meaning: '夜晚', example: 'Good night!', exampleMeaning: '晚安！', mastered: false },
-];
-
 export default function VocabularyModule() {
   const { isAuthenticated, addXP } = useAuthStore();
-  const [cards, setCards] = useState<FlashCard[]>(sampleCards);
+  const [selectedCategory, setSelectedCategory] = useState<VocabularyCategory>('daily');
+  const [cards, setCards] = useState<FlashCard[]>(
+    vocabularyData[selectedCategory].map(word => ({ ...word, mastered: false }))
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
-  const [reviewMode, setReviewMode] = useState(false);
+
+  const categories = Object.keys(vocabularyData) as VocabularyCategory[];
+
+  const handleCategoryChange = (category: VocabularyCategory) => {
+    setSelectedCategory(category);
+    setCards(vocabularyData[category].map(word => ({ ...word, mastered: false })));
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setShowResult(false);
+    setKnownCount(0);
+  };
 
   const currentCard = cards[currentIndex];
   const progress = Math.round(((currentIndex + 1) / cards.length) * 100);
@@ -79,17 +84,11 @@ export default function VocabularyModule() {
   };
 
   const resetCards = () => {
-    setCards(sampleCards);
+    setCards(vocabularyData[selectedCategory].map(word => ({ ...word, mastered: false })));
     setCurrentIndex(0);
     setIsFlipped(false);
     setKnownCount(0);
     setShowResult(false);
-    setReviewMode(false);
-  };
-
-  const toggleReviewMode = () => {
-    setReviewMode(!reviewMode);
-    resetCards();
   };
 
   if (!isAuthenticated) {
@@ -120,7 +119,7 @@ export default function VocabularyModule() {
               <CheckCircle2 className="text-white" size={48} />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">练习完成！</h2>
-            <p className="text-gray-600 mb-8">你完成了本次单词学习</p>
+            <p className="text-gray-600 mb-8">你完成了 {vocabularyCategoryNames[selectedCategory]} 的学习</p>
             
             <div className="grid grid-cols-3 gap-6 mb-8">
               <div>
@@ -137,12 +136,12 @@ export default function VocabularyModule() {
               </div>
             </div>
 
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
               <Button onClick={resetCards} variant="outline">
                 再练一次
               </Button>
-              <Button onClick={toggleReviewMode}>
-                {reviewMode ? '开始新学习' : '复习模式'}
+              <Button onClick={() => setShowResult(false)}>
+                选择其他词汇
               </Button>
             </div>
           </Card>
@@ -158,10 +157,26 @@ export default function VocabularyModule() {
           <h1 className="text-2xl font-bold text-gray-900">单词记忆</h1>
           <p className="text-gray-600">使用闪卡系统记忆单词</p>
         </div>
-        <Button variant="ghost" onClick={toggleReviewMode}>
-          {reviewMode ? '退出复习' : '复习模式'}
-        </Button>
       </div>
+
+      <Card className="mb-6">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">选择词汇分类</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedCategory === category
+                  ? `bg-gradient-to-r ${vocabularyCategoryColors[category]} text-white shadow-lg`
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {vocabularyCategoryNames[category]}
+            </button>
+          ))}
+        </div>
+      </Card>
 
       <Card className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -172,7 +187,12 @@ export default function VocabularyModule() {
             {progress}% 完成
           </span>
         </div>
-        <ProgressBar value={progress} color="from-blue-500 to-blue-600" />
+        <ProgressBar value={progress} color={`from-blue-500 to-blue-600`} />
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-xs text-gray-500">
+            {vocabularyCategoryNames[selectedCategory]}
+          </span>
+        </div>
       </Card>
 
       <div className="relative">
@@ -199,6 +219,14 @@ export default function VocabularyModule() {
                       待学习
                     </span>
                   )}
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    currentCard.difficulty === 'easy' ? 'bg-green-100 text-green-600' :
+                    currentCard.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                    'bg-red-100 text-red-600'
+                  }`}>
+                    {currentCard.difficulty === 'easy' ? '简单' :
+                     currentCard.difficulty === 'medium' ? '中等' : '困难'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-400">
                   <span className="text-sm">点击翻转</span>

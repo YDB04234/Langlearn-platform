@@ -4,6 +4,7 @@ export type CourseCategory = 'daily' | 'business' | 'travel' | 'culture' | 'acad
 export type UserRole = 'guest' | 'user' | 'vip';
 export type LessonType = 'vocabulary' | 'grammar' | 'speaking' | 'listening' | 'mixed';
 export type AchievementCategory = 'learning' | 'streak' | 'skill' | 'rare';
+export type AchievementType = 'milestone' | 'streak' | 'skill';
 
 export interface User {
   id: string;
@@ -78,10 +79,12 @@ export interface Lesson {
   id: string;
   courseId: string;
   title: string;
+  description?: string;
   type: LessonType;
   duration: number;
-  content: LessonContent;
-  isCompleted: boolean;
+  completed?: boolean;
+  content?: LessonContent;
+  isCompleted?: boolean;
   score?: number;
 }
 
@@ -89,6 +92,34 @@ export interface WeeklyStats {
   date: string;
   studyTime: number;
   wordsLearned: number;
+  accuracy: number;
+}
+
+export interface CourseProgress {
+  progress: number;
+  lessonsCompleted: number;
+  totalLessons: number;
+}
+
+export interface VocabularyProgress {
+  totalLearned: number;
+  mastered: number;
+  reviewing: number;
+  total: number;
+}
+
+export interface SpeakingProgress {
+  totalMinutes: number;
+  sessionsCompleted: number;
+}
+
+export interface ListeningProgress {
+  totalMinutes: number;
+  exercisesCompleted: number;
+}
+
+export interface GrammarProgress {
+  exercisesCompleted: number;
   accuracy: number;
 }
 
@@ -101,6 +132,13 @@ export interface LearningProgress {
   listeningAccuracy: number;
   totalStudyTime: number;
   weeklyProgress: WeeklyStats[];
+  courses?: Record<string, CourseProgress>;
+  vocabulary?: VocabularyProgress;
+  speaking?: SpeakingProgress;
+  listening?: ListeningProgress;
+  grammar?: GrammarProgress;
+  streakDays?: number;
+  lastActiveDate?: string;
 }
 
 export interface Achievement {
@@ -108,8 +146,10 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
-  category: AchievementCategory;
-  requirement: {
+  unlockedAt?: string;
+  type?: AchievementType;
+  category?: AchievementCategory;
+  requirement?: {
     type: string;
     value: number;
   };
@@ -131,6 +171,7 @@ export interface CommunityPost {
   likes: number;
   comments: number;
   createdAt: string;
+  language?: Language;
   tags: string[];
   isLiked?: boolean;
 }
